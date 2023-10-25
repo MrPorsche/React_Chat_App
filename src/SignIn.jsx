@@ -1,7 +1,7 @@
 import React from "react";
-import { useSignInWithGoogle } from "react-firebase-hooks/auth";
 
-function SignIn() {
+
+function SignIn(firebase,auth) {
 
     const signInWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -9,10 +9,10 @@ function SignIn() {
     }
     return (
         <>
-            <button className="sign-in" onClick={signInWithGoogle}></button>
+            <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
             <p>Let's have fun together.</p>
         </>
     )
-}
+  }
 
 export default SignIn;

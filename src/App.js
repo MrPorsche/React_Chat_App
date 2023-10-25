@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from "react";
 import './App.css';
 
-import firebase from '../node_modules/firebase/compat/app';
-import '../node_modules/firebase/compat/auth';
-import '../node_modules/firebase/compat/firestore';
-import '../node_modules/firebase/compat/analytics';
-import {useAuthState} from '../node_modules/react-firebase-hooks/auth'; 
-import SignOut from './Components/SignOut';
-import SignIn from './Components/SignIn';
-import ChatRoom from './Components/ChatRoom';
+
+import firebase from 'firebase/compat/app';
+
+
+
+import 'firebase/compat/auth';
+
+
+
+import 'firebase/compat/firestore';
+import 'firebase/analytics';
+
+import {useAuthState} from 'react-firebase-hooks/auth';
+import { useCollectionData } from "react-firebase-hooks/firestore";
+import SignIn from "./SignIn";
+import SignOut from "./SignOut";
 
 firebase.initializeApp({
+
   apiKey: "AIzaSyDMpHJdlXYmI1lV-JSjqCcZ9ipVAkb0SpI",
   authDomain: "react-chat-app-c2a09.firebaseapp.com",
   projectId: "react-chat-app-c2a09",
@@ -25,6 +34,7 @@ const auth = firebase.auth();
 const firestore = firebase.firestore();
 
 
+
 function App() {
 
   const[user] = useAuthState(auth);
@@ -32,7 +42,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>Welcome to a new "Lets be friendz!" Chat App.</h1>
+        <h1>Lets be Friendzzz 💬</h1>
         <SignOut />
       </header>
       <section>
@@ -40,6 +50,66 @@ function App() {
       </section>
     </div>
   );
+}
+
+function ChatRoom() {
+  const dummy = useRef();
+  const messagesRef = firestore.collection('messages');
+  const query = messagesRef.orderBy('createdAt').limit(100);
+
+  const [messages] = useCollectionData(query, {idField: 'id'});
+
+  const[formValue, setFormValue] = useState('');
+  
+
+  const sendMessage = async(e) => {
+      e.preventDefault();
+
+      const {uid,photoURL} = auth.currentUser;
+
+      await messagesRef.add({
+          text: formValue,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          uid,
+          photoURL
+      })
+      
+      setFormValue('');
+      dummy.current.scrollIntoView({behavior:'smooth'});
+  }
+
+  return (
+      <>
+          <main>
+
+              {messages && messages.map(msg => <ChatMessage key = {msg.id} message = {msg} />)}
+              <span ref={dummy}></span>
+          </main>
+
+
+          <form onSubmit={sendMessage}>
+
+              <input value={formValue} onChange={(e) => setFormValue(e.target.value)} placeholder="Whats on your mind?"/>
+              <button type="submit" disabled={!formValue}>🕊️</button>
+          </form>
+      </>
+  )
+
+}
+
+
+function ChatMessage(props) {
+  const {text, uid, photoURL} = props.message;
+  const messageClass = uid === auth.currentUser.uid ? 'sent' : 'receuved';
+
+  return (
+      <>
+          <div className={`message ${messageClass}`}>
+              <img src={photoURL || 'https://api.adorable.io/avatars/23/abott@adorable.png'} alt="profile_image"/>
+              <p>{text}</p>
+          </div>
+      </>
+  )
 }
 
 export default App;
